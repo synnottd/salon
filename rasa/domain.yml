@@ -1,0 +1,106 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - book_appointment
+  - check_availability
+  - cancel_appointment
+  - list_services
+  - ask_prices
+  - bot_challenge
+  - nlu_fallback
+  - inform
+
+entities:
+  - service
+  - date
+  - time
+  - stylist
+
+slots:
+  service:
+    type: text
+    mappings:
+    - type: from_entity
+      entity: service
+  date:
+    type: text
+    mappings:
+    - type: from_entity
+      entity: date
+  time:
+    type: text
+    mappings:
+    - type: from_entity
+      entity: time
+  stylist:
+    type: text
+    mappings:
+    - type: from_entity
+      entity: stylist
+
+responses:
+  utter_greet:
+    - text: "Hello! I'm your salon booking assistant. How can I help you today?"
+  
+  utter_goodbye:
+    - text: "Goodbye! Have a great day!"
+  
+  utter_book_appointment:
+    - text: "I'll help you book an appointment. What service would you like to book?"
+  
+  utter_ask_date:
+    - text: "What date would you like to book for?"
+  
+  utter_ask_time:
+    - text: "What time would you prefer?"
+  
+  utter_ask_stylist:
+    - text: "Which stylist would you like to book with?"
+  
+  utter_confirm_booking:
+    - text: "Great! I've confirmed your appointment. Is there anything else you need?"
+
+  utter_list_services:
+    - text: "Here are our available services: Haircut, Hair Coloring, Styling, Manicure, Pedicure, and Facial treatments."
+
+  utter_ask_prices:
+    - text: "Here are our prices: Haircut ($50-$100), Hair Coloring ($100-$200), Styling ($40-$80), Manicure ($30), Pedicure ($40), Facial treatments ($60-$120)."
+
+  utter_check_availability:
+    - text: "Let me check the availability for {service} on {date}."
+    - text: "I'll look up available time slots for you."
+
+  utter_cancel_appointment:
+    - text: "I understand you want to cancel your appointment. Could you confirm the date and time of the appointment you wish to cancel?"
+
+  utter_appointment_cancelled:
+    - text: "Your appointment has been cancelled. We hope to see you again soon!"
+
+  utter_default:
+    - text: "I'm not sure I understand. Could you rephrase that?"
+
+  utter_iamabot:
+    - text: "I am a bot, powered by Rasa. I'm here to help you book salon appointments and answer your questions."
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
+
+actions:
+  - action_handle_inform
+  - utter_greet
+  - utter_goodbye
+  - utter_book_appointment
+  - utter_ask_date
+  - utter_ask_time
+  - utter_ask_stylist
+  - utter_confirm_booking
+  - utter_list_services
+  - utter_ask_prices
+  - utter_check_availability
+  - utter_cancel_appointment
+  - utter_appointment_cancelled
+  - utter_default
+  - utter_iamabot 

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Salon Voice Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        #status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .recording {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        #conversation {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: 20%;
+        }
+        .bot-message {
+            background-color: #f5f5f5;
+            margin-right: 20%;
+        }
+        .metadata {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .entities {
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        .entity {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 2px 6px;
+            background-color: #e8f5e9;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Salon Voice Assistant</h1>
+        
+        <div class="controls">
+            <button id="startButton">Start Recording</button>
+            <button id="stopButton" disabled>Stop Recording</button>
+        </div>
+        
+        <div id="status"></div>
+        <div id="conversation"></div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let sessionId = null;
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const status = document.getElementById('status');
+        const conversation = document.getElementById('conversation');
+
+        // Generate or retrieve session ID when page loads
+        window.onload = () => {
+            // Check URL parameters for session_id
+            const urlParams = new URLSearchParams(window.location.search);
+            sessionId = urlParams.get('session_id');
+            
+            // If no session_id in URL, generate a new one
+            if (!sessionId) {
+                sessionId = generateUUID();
+                // Update URL with new session_id
+                const newUrl = `${window.location.pathname}?session_id=${sessionId}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+            }
+        };
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        startButton.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await sendAudioToServer(audioBlob);
+                    audioChunks = [];
+                };
+                
+                mediaRecorder.start();
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                status.textContent = 'Recording...';
+                status.className = 'recording';
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                status.textContent = 'Error accessing microphone. Please ensure you have granted permission.';
+            }
+        };
+
+        stopButton.onclick = () => {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            startButton.disabled = false;
+            stopButton.disabled = true;
+            status.textContent = 'Processing...';
+            status.className = '';
+        };
+
+        async function sendAudioToServer(audioBlob) {
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob);
+
+                const response = await fetch(`/api/v1/voice/conversation?session_id=${sessionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Get the response as an ArrayBuffer
+                const buffer = await response.arrayBuffer();
+                
+                // Get the boundary from the Content-Type header
+                const contentType = response.headers.get('Content-Type');
+                const boundaryMatch = contentType.match(/boundary=(.+)$/);
+                if (!boundaryMatch) {
+                    throw new Error('Could not find boundary in Content-Type');
+                }
+                const boundary = '--' + boundaryMatch[1];
+
+                const parts = parseMultipartResponse(buffer, boundary);
+                
+                if (parts.audio) {
+                    // Create audio blob and play it
+                    const audioBlob = new Blob([parts.audio], { type: 'audio/mp3' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio();
+                    
+                    audio.onerror = (e) => {
+                        console.error('Audio playback error:', e);
+                        status.textContent = 'Error playing audio response';
+                    };
+                    
+                    audio.onended = () => {
+                        URL.revokeObjectURL(audioUrl);
+                    };
+
+                    try {
+                        audio.src = audioUrl;
+                        await audio.play();
+                    } catch (error) {
+                        console.error('Audio playback failed:', error);
+                        status.textContent = 'Error playing audio response';
+                    }
+                }
+
+                if (parts.json) {
+                    displayConversation(parts.json);
+                }
+
+                status.textContent = 'Ready';
+            } catch (error) {
+                console.error('Error processing response:', error);
+                status.textContent = 'Error processing response. Please try again.';
+            }
+        }
+
+        function parseMultipartResponse(arrayBuffer, boundary) {
+            const result = { audio: null, json: null };
+            
+            // Convert ArrayBuffer to Uint8Array for easier manipulation
+            const data = new Uint8Array(arrayBuffer);
+            const boundaryBytes = new TextEncoder().encode(boundary);
+            
+            // Find boundary positions
+            const boundaries = [];
+            let pos = 0;
+            while (pos < data.length) {
+                let found = true;
+                for (let i = 0; i < boundaryBytes.length; i++) {
+                    if (data[pos + i] !== boundaryBytes[i]) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) {
+                    boundaries.push(pos);
+                    pos += boundaryBytes.length;
+                } else {
+                    pos++;
+                }
+            }
+            
+            // Process each part
+            for (let i = 0; i < boundaries.length - 1; i++) {
+                const start = boundaries[i];
+                const end = boundaries[i + 1];
+                const part = data.slice(start, end);
+                
+                // Convert to text to check headers
+                const textDecoder = new TextDecoder();
+                const partText = textDecoder.decode(part);
+                
+                // Check for both audio/mp3 and audio/mpeg content types
+                if (partText.includes('Content-Type: audio/mp3') || partText.includes('Content-Type: audio/mpeg')) {
+                    // Find the start of audio data (after double CRLF)
+                    const headerEnd = partText.indexOf('\r\n\r\n');
+                    if (headerEnd !== -1) {
+                        const contentStart = start + headerEnd + 4;
+                        const contentEnd = end - 2; // Remove trailing CRLF
+                        result.audio = data.slice(contentStart, contentEnd);
+                    }
+                } else if (partText.includes('Content-Type: application/json')) {
+                    // Extract JSON data
+                    const headerEnd = partText.indexOf('\r\n\r\n');
+                    if (headerEnd !== -1) {
+                        const jsonText = partText.substring(headerEnd + 4).trim();
+                        try {
+                            result.json = JSON.parse(jsonText);
+                        } catch (e) {
+                            console.error('Error parsing JSON:', e);
+                        }
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        function displayConversation(data) {
+            // Create user message element
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user-message';
+            userDiv.innerHTML = `
+                <div>You: ${data.user_text}</div>
+            `;
+
+            // Create bot message element
+            const botDiv = document.createElement('div');
+            botDiv.className = 'message bot-message';
+            
+            let botContent = `<div>Assistant: ${data.bot_text}</div>`;
+            
+            // Add intent information if available
+            if (data.rasa_response && data.rasa_response.intent) {
+                botContent += `
+                    <div class="metadata">
+                        Intent: ${data.rasa_response.intent.name} 
+                        (Confidence: ${(data.rasa_response.intent.confidence * 100).toFixed(1)}%)
+                    </div>
+                `;
+            }
+
+            // Add entities if available
+            if (data.rasa_response && data.rasa_response.entities && data.rasa_response.entities.length > 0) {
+                botContent += '<div class="entities">Entities: ';
+                data.rasa_response.entities.forEach(entity => {
+                    botContent += `
+                        <span class="entity">
+                            ${entity.entity}: ${entity.value}
+                            (${(entity.confidence_entity * 100).toFixed(1)}%)
+                        </span>
+                    `;
+                });
+                botContent += '</div>';
+            }
+
+            botDiv.innerHTML = botContent;
+
+            // Add messages to conversation
+            conversation.appendChild(userDiv);
+            conversation.appendChild(botDiv);
+            
+            // Scroll to bottom
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+    </script>
+</body>
+</html> 

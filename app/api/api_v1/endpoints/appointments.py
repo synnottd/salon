@@ -4,17 +4,17 @@ from datetime import datetime
 from typing import List, Optional
 from app.db.session import get_db
 from app.services.appointment_service import AppointmentService
-from app.core.auth import get_current_user
-from app.db.models import Customer, Appointment
+from app.models import Appointment, AppointmentStatus
 from pydantic import BaseModel
 
 router = APIRouter()
 
 class AppointmentCreate(BaseModel):
+    customer_id: int
     staff_id: int
     service_id: int
     branch_id: int
-    start_time: datetime
+    appointment_time: datetime
     notes: Optional[str] = None
 
 class AppointmentResponse(BaseModel):
@@ -23,18 +23,14 @@ class AppointmentResponse(BaseModel):
     staff_id: int
     service_id: int
     branch_id: int
-    start_time: datetime
+    appointment_time: datetime
     end_time: datetime
     status: str
-    notes: Optional[str]
-
-    class Config:
-        from_attributes = True
+    notes: Optional[str] = None
 
 @router.post("/", response_model=AppointmentResponse)
 async def create_appointment(
     appointment: AppointmentCreate,
-    current_user: Customer = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -42,27 +38,27 @@ async def create_appointment(
     """
     appointment_service = AppointmentService(db)
     return await appointment_service.create_appointment(
-        customer_id=current_user.id,
+        customer_id=appointment.customer_id,
         staff_id=appointment.staff_id,
         service_id=appointment.service_id,
         branch_id=appointment.branch_id,
-        start_time=appointment.start_time,
+        appointment_time=appointment.appointment_time,
         notes=appointment.notes
     )
 
 @router.get("/", response_model=List[AppointmentResponse])
 async def get_appointments(
+    customer_id: Optional[int] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    current_user: Customer = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get all appointments for the current user
+    Get all appointments, optionally filtered by customer
     """
     appointment_service = AppointmentService(db)
     return await appointment_service.get_customer_appointments(
-        customer_id=current_user.id,
+        customer_id=customer_id,
         start_date=start_date,
         end_date=end_date
     )
@@ -70,7 +66,6 @@ async def get_appointments(
 @router.get("/{appointment_id}", response_model=AppointmentResponse)
 async def get_appointment(
     appointment_id: int,
-    current_user: Customer = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -78,14 +73,12 @@ async def get_appointment(
     """
     appointment_service = AppointmentService(db)
     return await appointment_service.get_appointment(
-        appointment_id=appointment_id,
-        customer_id=current_user.id
+        appointment_id=appointment_id
     )
 
 @router.post("/{appointment_id}/cancel", response_model=AppointmentResponse)
 async def cancel_appointment(
     appointment_id: int,
-    current_user: Customer = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -93,8 +86,7 @@ async def cancel_appointment(
     """
     appointment_service = AppointmentService(db)
     return await appointment_service.cancel_appointment(
-        appointment_id=appointment_id,
-        customer_id=current_user.id
+        appointment_id=appointment_id
     )
 
 @router.get("/availability")

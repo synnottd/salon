@@ -1,0 +1,83 @@
+version: "3.1"
+
+stories:
+- story: happy booking path
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: book_appointment
+  - action: utter_book_appointment
+  - intent: inform
+    entities:
+    - service: haircut
+  - action: action_handle_inform
+  - intent: inform
+    entities:
+    - date: tomorrow
+  - action: action_handle_inform
+  - intent: inform
+    entities:
+    - time: "2pm"
+  - action: action_handle_inform
+  - intent: inform
+    entities:
+    - stylist: "Emma Thompson"
+  - action: action_handle_inform
+  - intent: goodbye
+  - action: utter_goodbye
+
+- story: check availability path
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: check_availability
+  - action: utter_check_availability
+  - action: utter_ask_date
+  - intent: check_availability
+    entities:
+    - date: tomorrow
+  - action: utter_ask_time
+  - intent: check_availability
+    entities:
+    - time: "3pm"
+  - action: utter_confirm_booking
+  - intent: goodbye
+  - action: utter_goodbye
+
+- story: list services path
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: list_services
+  - action: utter_list_services
+  - intent: book_appointment
+  - action: utter_book_appointment
+  - intent: goodbye
+  - action: utter_goodbye
+
+- story: ask prices path
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: ask_prices
+  - action: utter_ask_prices
+  - intent: book_appointment
+  - action: utter_book_appointment
+  - intent: goodbye
+  - action: utter_goodbye
+
+- story: cancel appointment path
+  steps:
+  - intent: greet
+  - action: utter_greet
+  - intent: cancel_appointment
+  - action: utter_cancel_appointment
+  - intent: cancel_appointment
+  - action: utter_appointment_cancelled
+  - intent: goodbye
+  - action: utter_goodbye
+
+- story: direct goodbye
+  steps:
+  - intent: goodbye
+  - action: utter_goodbye 

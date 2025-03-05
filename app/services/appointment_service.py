@@ -1,8 +1,21 @@
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from app.db.models import Appointment, Staff, Service, Branch, AppointmentStatus
+from app.models import Appointment, Staff, Service, Branch, AppointmentStatus
 from app.core.exceptions import AppointmentError
+
+def appointment_to_dict(appointment: Appointment) -> Dict[str, Any]:
+    return {
+        "id": appointment.id,
+        "customer_id": appointment.customer_id,
+        "staff_id": appointment.staff_id,
+        "service_id": appointment.service_id,
+        "branch_id": appointment.branch_id,
+        "appointment_time": appointment.appointment_time,
+        "end_time": appointment.end_time,
+        "status": appointment.status.value if appointment.status else None,
+        "notes": appointment.notes
+    }
 
 class AppointmentService:
     def __init__(self, db: Session):
@@ -29,8 +42,8 @@ class AppointmentService:
         query = self.db.query(Appointment).filter(
             Appointment.branch_id == branch_id,
             Appointment.service_id == service_id,
-            Appointment.start_time >= start_of_day,
-            Appointment.start_time < end_of_day,
+            Appointment.appointment_time >= start_of_day,
+            Appointment.appointment_time < end_of_day,
             Appointment.status != AppointmentStatus.CANCELLED
         )
 
@@ -53,7 +66,7 @@ class AppointmentService:
             is_available = True
             for appointment in existing_appointments:
                 if (current_time < appointment.end_time and 
-                    slot_end > appointment.start_time):
+                    slot_end > appointment.appointment_time):
                     is_available = False
                     break
 
@@ -70,9 +83,9 @@ class AppointmentService:
         staff_id: int,
         service_id: int,
         branch_id: int,
-        start_time: datetime,
+        appointment_time: datetime,
         notes: Optional[str] = None
-    ) -> Appointment:
+    ) -> Dict[str, Any]:
         """
         Create a new appointment
         """
@@ -80,40 +93,39 @@ class AppointmentService:
         available_slots = await self.check_availability(
             branch_id=branch_id,
             service_id=service_id,
-            date=start_time,
+            date=appointment_time,
             staff_id=staff_id
         )
 
-        if start_time not in available_slots:
+        if appointment_time not in available_slots:
             raise AppointmentError("Selected time slot is not available")
 
         service = self.db.query(Service).filter(Service.id == service_id).first()
-        end_time = start_time + timedelta(minutes=service.duration_minutes)
+        end_time = appointment_time + timedelta(minutes=service.duration_minutes)
 
         appointment = Appointment(
             customer_id=customer_id,
             staff_id=staff_id,
             service_id=service_id,
             branch_id=branch_id,
-            start_time=start_time,
+            appointment_time=appointment_time,
             end_time=end_time,
             notes=notes,
-            status=AppointmentStatus.PENDING
+            status=AppointmentStatus.SCHEDULED
         )
 
         self.db.add(appointment)
         self.db.commit()
         self.db.refresh(appointment)
 
-        return appointment
+        return appointment_to_dict(appointment)
 
-    async def cancel_appointment(self, appointment_id: int, customer_id: int) -> Appointment:
+    async def cancel_appointment(self, appointment_id: int) -> Dict[str, Any]:
         """
         Cancel an appointment
         """
         appointment = self.db.query(Appointment).filter(
-            Appointment.id == appointment_id,
-            Appointment.customer_id == customer_id
+            Appointment.id == appointment_id
         ).first()
 
         if not appointment:
@@ -126,38 +138,38 @@ class AppointmentService:
         self.db.commit()
         self.db.refresh(appointment)
 
-        return appointment
+        return appointment_to_dict(appointment)
 
-    async def get_appointment(self, appointment_id: int, customer_id: int) -> Appointment:
+    async def get_appointment(self, appointment_id: int) -> Dict[str, Any]:
         """
         Get appointment details
         """
         appointment = self.db.query(Appointment).filter(
-            Appointment.id == appointment_id,
-            Appointment.customer_id == customer_id
+            Appointment.id == appointment_id
         ).first()
 
         if not appointment:
             raise AppointmentError("Appointment not found")
 
-        return appointment
+        return appointment_to_dict(appointment)
 
     async def get_customer_appointments(
         self,
-        customer_id: int,
+        customer_id: Optional[int] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
-    ) -> List[Appointment]:
+    ) -> List[Dict[str, Any]]:
         """
-        Get all appointments for a customer within a date range
+        Get all appointments, optionally filtered by customer and date range
         """
-        query = self.db.query(Appointment).filter(
-            Appointment.customer_id == customer_id
-        )
+        query = self.db.query(Appointment)
 
+        if customer_id:
+            query = query.filter(Appointment.customer_id == customer_id)
         if start_date:
-            query = query.filter(Appointment.start_time >= start_date)
+            query = query.filter(Appointment.appointment_time >= start_date)
         if end_date:
-            query = query.filter(Appointment.start_time <= end_date)
+            query = query.filter(Appointment.appointment_time <= end_date)
 
-        return query.order_by(Appointment.start_time).all() 
+        appointments = query.order_by(Appointment.appointment_time).all()
+        return [appointment_to_dict(appointment) for appointment in appointments] 
