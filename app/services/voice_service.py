@@ -1,6 +1,6 @@
 from google.cloud import speech_v1
 from google.cloud import texttospeech_v1
-from google.cloud.dialogflow_cx_v3 import SessionsClient, types
+from google.cloud.dialogflowcx_v3 import SessionsClient, types
 from app.core.config import settings
 import io
 import json
