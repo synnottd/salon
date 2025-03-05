@@ -6,7 +6,7 @@ python-dotenv==1.0.1
 pydantic==2.6.1
 google-cloud-speech==2.24.1
 google-cloud-texttospeech==2.15.0
-dialogflow==1.2.0
+google-cloud-dialogflow-cx==1.40.0
 stripe==7.11.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
