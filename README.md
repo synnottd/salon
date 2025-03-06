@@ -30,13 +30,6 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. Install Rasa dependencies:
-```bash
-cd rasa
-pip install -r requirements.txt
-cd ..
-```
-
 ## Database Setup
 
 1. Start PostgreSQL service:
