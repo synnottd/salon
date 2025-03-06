@@ -1,0 +1,147 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - hey
+    - hello
+    - hi
+    - hello there
+    - good morning
+    - good evening
+    - hey there
+    - let's go
+    - hey dude
+    - goodmorning
+    - goodevening
+    - good afternoon
+
+- intent: goodbye
+  examples: |
+    - cu
+    - good by
+    - cee you later
+    - good night
+    - bye
+    - goodbye
+    - have a nice day
+    - see you around
+    - bye bye
+    - see you later
+
+- intent: book_appointment
+  examples: |
+    - I want to book an appointment
+    - Can I schedule a service?
+    - I need to make a booking
+    - Book appointment
+    - Schedule appointment
+    - Make a reservation
+    - I'd like to book a service
+    - Help me book an appointment
+    - Schedule a salon visit
+    - Book a slot
+
+- intent: inform
+  examples: |
+    - I want a [haircut](service)
+    - I need [hair coloring](service)
+    - [styling](service) please
+    - I'd like a [manicure](service)
+    - [pedicure](service)
+    - book me for [facial](service)
+    - [tomorrow](date)
+    - [next week](date)
+    - [today](date)
+    - [2pm](time)
+    - at [3:30](time)
+    - [morning](time)
+    - [afternoon](time)
+    - [evening](time)
+    - [5 o'clock](time)
+    - [10am](time)
+    - with [Emma Thompson](stylist)
+    - I prefer [James Rodriguez](stylist)
+    - book [Sophia Chen](stylist)
+    - [Michael Williams](stylist) please
+    - I'd like [Isabella Martinez](stylist) to do it
+    - Can [Daniel Kim](stylist) do my hair
+    - I want [Olivia Parker](stylist) to do my hair
+    - Book me with [Alexander Davis](stylist)
+    - Schedule with [Ava Johnson](stylist)
+    - I'd like to see [Lucas Garcia](stylist)
+    - I want a [haircut](service) with [Emma Thompson](stylist)
+    - Book me for [hair coloring](service) with [James Rodriguez](stylist) [next week](date) in the [morning](time)
+    - I need a [manicure](service) by [Sophia Chen](stylist) [today](date) at [3:30](time)
+    - Schedule [styling](service) with [Michael Williams](stylist) for [tomorrow](date) [afternoon](time)
+    - [pedicure](service) appointment with [Isabella Martinez](stylist) [next week](date) at [5 o'clock](time)
+    - Book [facial](service) with [Daniel Kim](stylist) for [today](date) in the [evening](time)
+    - I want [Olivia Parker](stylist) to do my [haircut](service) [tomorrow](date) at [2pm](time)
+    - Schedule a [manicure](service) with [Alexander Davis](stylist) for [next week](date)
+    - Book [hair coloring](service) with [Ava Johnson](stylist) [today](date) at [10am](time)
+    - I need [Lucas Garcia](stylist) for a [pedicure](service) [tomorrow](date) [morning](time)
+
+- intent: check_availability
+  examples: |
+    - What times are available?
+    - When can I come in?
+    - Is there availability tomorrow?
+    - Check available slots
+    - Show me available times
+    - What slots are open?
+    - When are you free?
+    - Do you have any openings?
+    - Available appointments
+    - Check schedule
+
+- intent: list_services
+  examples: |
+    - What services do you offer?
+    - Show me your services
+    - What can I get done here?
+    - List all services
+    - What treatments are available?
+    - Tell me about your services
+    - What do you do here?
+    - Services available
+    - What can you do?
+    - Show services
+
+- intent: ask_prices
+  examples: |
+    - How much do services cost?
+    - What are your prices?
+    - Price list please
+    - Show me the prices
+    - How much is a haircut?
+    - What's the cost?
+    - Tell me about pricing
+    - Price information
+    - Service costs
+    - Fee structure
+
+- intent: cancel_appointment
+  examples: |
+    - I need to cancel my appointment
+    - Cancel booking
+    - Remove my appointment
+    - I want to cancel
+    - Cancel my booking
+    - Can you cancel my appointment?
+    - Need to cancel
+    - Remove booking
+    - Cancel my slot
+    - Delete my booking
+
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you a human?
+    - am I talking to a bot?
+    - am I talking to a human?
+    - who are you?
+    - what are you?
+    - are you real?
+    - are you human?
+    - are you a robot?
+    - are you AI? 
