@@ -31,7 +31,6 @@ class Settings(BaseSettings):
 
     # Google Cloud
     GOOGLE_CLOUD_PROJECT: str
-    GOOGLE_APPLICATION_CREDENTIALS: str
 
     # DialogFlow
     DIALOGFLOW_PROJECT_ID: str

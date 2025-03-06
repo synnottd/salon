@@ -63,6 +63,26 @@ async def get_appointments(
         end_date=end_date
     )
 
+@router.get("/availability")
+async def check_availability(
+    branch_id: int,
+    service_id: int,
+    date: datetime,
+    staff_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Check available time slots for a service
+    """
+    appointment_service = AppointmentService(db)
+    return await appointment_service.check_availability(
+        branch_id=branch_id,
+        service_id=service_id,
+        date=date,
+        staff_id=staff_id
+    ) 
+
+
 @router.get("/{appointment_id}", response_model=AppointmentResponse)
 async def get_appointment(
     appointment_id: int,
@@ -89,21 +109,3 @@ async def cancel_appointment(
         appointment_id=appointment_id
     )
 
-@router.get("/availability")
-async def check_availability(
-    branch_id: int,
-    service_id: int,
-    date: datetime,
-    staff_id: Optional[int] = None,
-    db: Session = Depends(get_db)
-):
-    """
-    Check available time slots for a service
-    """
-    appointment_service = AppointmentService(db)
-    return await appointment_service.check_availability(
-        branch_id=branch_id,
-        service_id=service_id,
-        date=date,
-        staff_id=staff_id
-    ) 

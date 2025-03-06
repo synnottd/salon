@@ -33,11 +33,11 @@ stories:
   - intent: check_availability
   - action: utter_check_availability
   - action: utter_ask_date
-  - intent: check_availability
+  - intent: inform
     entities:
     - date: tomorrow
   - action: utter_ask_time
-  - intent: check_availability
+  - intent: inform
     entities:
     - time: "3pm"
   - action: utter_confirm_booking
