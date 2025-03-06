@@ -1,74 +1,157 @@
-# Salon Booking AI Voice Agent
+# Salon Assistant
 
-An AI-powered voice agent that handles salon bookings through natural voice commands. This system allows customers to book appointments, check availability, and manage their bookings using voice interactions.
-
-## Features
-
-- Natural voice interface for booking appointments
-- Real-time availability checking across multiple branches
-- Staff and service management
-- Secure payment processing
-- Multi-branch coordination
-- Natural conversation flow with context awareness
-
-## Tech Stack
-
-- Backend: FastAPI (Python)
-- Database: PostgreSQL
-- Voice Processing: Google Cloud Speech-to-Text
-- NLP: DialogFlow
-- Text-to-Speech: Google Cloud TTS
-- Payment Processing: Stripe
-- Real-time Updates: WebSocket
-- Authentication: JWT
+A voice-enabled salon booking assistant that helps customers schedule appointments and check service availability.
 
 ## Prerequisites
 
-- Python 3.8+
-- PostgreSQL
-- Google Cloud Platform account with Speech-to-Text and Text-to-Speech APIs enabled
-- DialogFlow account
-- Stripe account
+- Python 3.8 or higher
+- PostgreSQL 12 or higher
+- psql command-line tool
 
-## Setup
+## Installation
 
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd salon-booking-ai
+cd salon
 ```
 
 2. Create and activate a virtual environment:
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
 ```
 
-3. Install dependencies:
+3. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Set up environment variables:
+4. Install Rasa dependencies:
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+cd rasa
+pip install -r requirements.txt
+cd ..
 ```
 
-5. Initialize the database:
+## Database Setup
+
+1. Start PostgreSQL service:
 ```bash
-python scripts/init_db.py
+# On macOS
+brew services start postgresql
+
+# On Ubuntu/Debian
+sudo service postgresql start
+
+# On Windows
+# Start PostgreSQL service from Services application
 ```
 
-6. Run the development server:
+2. Create the database:
 ```bash
-uvicorn app.main:app --reload
+psql -U postgres
+CREATE DATABASE salon;
+\q
 ```
 
-## Project Structure
+3. Seed the database with initial data:
+```bash
+# From project root
+python scripts/seed_database.py
+```
+
+## Configuration
+
+1. Create a `.env` file in the root directory:
+```env
+# Database Settings
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/salon
+
+# Voice Service Settings
+WHISPER_MODEL=tiny  # Options: tiny, base, small, medium, large
+TTS_LANGUAGE=en
+TTS_PROVIDER=gtts  # Options: gtts, google_cloud
+STT_PROVIDER=whisper  # Options: whisper, google_cloud
+
+# Optional Google Cloud Settings
+GOOGLE_CLOUD_CREDENTIALS=path/to/credentials.json  # Only if using Google Cloud services
+```
+
+## Running the Application
+
+You'll need to run three components: the FastAPI server, the Rasa server, and the Rasa Action server.
+
+1. Ensure PostgreSQL is running:
+```bash
+# Check PostgreSQL status
+# On macOS
+brew services list | grep postgresql
+
+# On Ubuntu/Debian
+sudo service postgresql status
+
+# On Windows
+# Check Services application
+```
+
+2. Start the FastAPI server:
+```bash
+# From the project root
+uvicorn app.main:app --reload --port 8000
+```
+
+3. Start the Rasa server:
+```bash
+# From the rasa directory
+cd rasa
+rasa run --enable-api --cors "*" --port 5005
+```
+
+4. Start the Rasa Action server (in a new terminal):
+```bash
+# From the rasa directory
+cd rasa
+rasa run actions --port 5055
+```
+
+## Testing the Application
+
+1. Run the test suite:
+```bash
+# From the project root
+pytest
+```
+
+2. Access the voice interface:
+- Open your browser and navigate to: `http://localhost:8000/static/voice.html`
+- Click "Start Recording" and allow microphone access
+- Speak your request (e.g., "I want to book a haircut")
+- Click "Stop Recording" to process your request
+
+## Available Services
+
+The assistant can help with:
+- Booking appointments for:
+  - Haircuts
+  - Massages
+  - Facials
+  - Manicures
+  - Pedicures
+  - Hair coloring
+  - Styling
+- Checking service availability
+- Canceling appointments
+
+## Development
+
+### Project Structure
 
 ```
-salon-booking-ai/
+salon/
 ├── app/
 │   ├── api/            # API endpoints
 │   ├── core/           # Core functionality
@@ -87,13 +170,6 @@ salon-booking-ai/
 Once the server is running, visit:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
-
-## Testing
-
-Run tests with:
-```bash
-pytest
-```
 
 ## License
 
