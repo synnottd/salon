@@ -108,15 +108,25 @@ uvicorn app.main:app --reload --port 8000
 3. Start the Rasa server:
 ```bash
 # From the rasa directory
-cd rasa
-rasa run --enable-api --cors "*" --port 5005
+rasa run --enable-api --cors "*" --port 5005 --model stable-model.tar.gz
 ```
 
 4. Start the Rasa Action server (in a new terminal):
 ```bash
 # From the rasa directory
-cd rasa
 rasa run actions --port 5055
+```
+## Training a new model
+After making changes to the rasa config files you will need to re-train
+```bash
+# From the rasa directory
+rasa train
+```
+
+You can then start the model
+```bash
+# From the rasa directory
+rasa run --enable-api --cors "*" --port 5005 --model route/to/model
 ```
 
 ## Testing the Application
