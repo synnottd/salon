@@ -66,12 +66,13 @@ python scripts/seed_database.py
 
 ## Configuration
 
-1. Create a `.env` file in the root directory:
+1. Create a `.env` file in the root directory or copy from .env.example:
+
 ```env
 # Database Settings
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/salon
+DATABASE_URL=postgresql://{username}:{password}@localhost:5432/salon
 
-# Voice Service Settings
+# Voice Service Settingsa
 WHISPER_MODEL=tiny  # Options: tiny, base, small, medium, large
 TTS_LANGUAGE=en
 TTS_PROVIDER=gtts  # Options: gtts, google_cloud
