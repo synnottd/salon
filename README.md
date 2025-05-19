@@ -1,3 +1,7 @@
+# Preamble
+
+I built this heavily relying on AI and mostly whatever model Claude wanted to use. There is still a lot of AI garbage left in the codebase. This is somewhat intentional. I did the bare minimum I could to get it to function. This was a take home project for an interview. I ended up spending way too much time on it (~10 hours). Frankly, I was enjoying playing around with vibe coding and building an AI agent, also building something in pythong for the first time in almost 10 years. Lot's of take aways, lot's of potential improvements.
+
 # Salon Assistant
 
 A voice-enabled salon booking assistant that helps customers schedule appointments and check service availability.
